@@ -35,7 +35,7 @@ namespace Accolades.Plugin {
             for (int i = 0; i < StartOfRound.Instance.allPlayerScripts.Length; i++) {
 				if (Steps.Min() == stats[i].stepsTaken) {
 					Best[1] = scripts[i].playerUsername;
-				} 
+				}
 				if (Steps.Max() == stats[i].stepsTaken && Profit.Max() == stats[i].profitable) {
 					Best[2] = scripts[i].playerUsername;
 				} 
@@ -46,94 +46,70 @@ namespace Accolades.Plugin {
                     Best[4] = scripts[i].playerUsername;
                 }
             }
-
         }
 
         [HarmonyPatch(typeof(StartOfRound))]
 		[HarmonyPatch("WritePlayerNotes")]
 		[HarmonyPrefix]
 		public static void WriteNotes() {
-            int AllOnlinePlayers = StartOfRound.Instance.allPlayerScripts.Length;
-            
-            PlayerStats[] stats = StartOfRound.Instance.gameStats.allPlayerStats;
+			int AllOnlinePlayers = StartOfRound.Instance.allPlayerScripts.Length;
 			PlayerControllerB[] scripts = StartOfRound.Instance.allPlayerScripts;
-                                   
-			int GarnishScrapCount = TimeOfDay.Instance.profitQuota / 65; // (Minimum of 2)
-			int GarnishHighScrapCount = GarnishScrapCount * GarnishScrapCount;
-			bool profitable = StartOfRound.Instance.scrapCollectedLastRound >= GarnishScrapCount;
-            bool highlyProfitable = StartOfRound.Instance.scrapCollectedLastRound >= GarnishHighScrapCount ||
-            StartOfRound.Instance.scrapCollectedLastRound >= 30;
-			// Number count also doesn't check to see if it's the actual amount you know, since there's a ton of different combinations and stuff
+			PlayerStats[] stats = StartOfRound.Instance.gameStats.allPlayerStats;
 
-			if (StartOfRound.Instance.connectedPlayersAmount == 0) {
-                
-				if (profitable) {
-					if (highlyProfitable) {
-							StartOfRound.Instance.gameStats.allPlayerStats[0].playerNotes.Add("REALLY Profitable!");
-					} else {
-							StartOfRound.Instance.gameStats.allPlayerStats[0].playerNotes.Add("Profitable!");
-					}
-				} else {
-						StartOfRound.Instance.gameStats.allPlayerStats[0].playerNotes.Add("Failed, but no penalty.");
-						StartOfRound.Instance.gameStats.allPlayerStats[0].playerNotes.Add("Base quota is " + GarnishScrapCount + " items.");
-				}
-			}
-				
 			if (StartOfRound.Instance.connectedPlayersAmount > 0) {
-
 				CalculateProfit();
 
-				for (int i = 0; i < AllOnlinePlayers ; i++) {
-
+				for (int i = 0; i < AllOnlinePlayers; i++) {
 					bool lifeCheck = !StartOfRound.Instance.allPlayerScripts[i].isPlayerDead && !StartOfRound.Instance.allPlayerScripts[i].disconnectedMidGame;
+					
+					bool BestCheck =
+						Best[1] != "" &&
+						Best[2] != "" &&
+						Best[3] != "" &&
+						Best[4] != "";
 
 					StartOfRound.Instance.gameStats.allPlayerStats[i].isActivePlayer =
 						StartOfRound.Instance.allPlayerScripts[i].disconnectedMidGame ||
 						StartOfRound.Instance.allPlayerScripts[i].isPlayerDead ||
 						StartOfRound.Instance.allPlayerScripts[i].isPlayerControlled;
 
-					if (stats[i].isActivePlayer) {
+					if (stats[i].isActivePlayer && BestCheck) {
 						if (scripts[i].playerUsername == Best[1]) {
 							if (lifeCheck) {
 								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Laziest!");
-								Best[1] = "";
 							} else {
-								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Wasn't too careful.");
-								Best[1] = "";
+								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Put in too little effort.");
 							}
 						}
 
 						if (scripts[i].playerUsername == Best[2]) {
 							if (lifeCheck) {
 								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Most Profitable!");
-                                Best[2] = "";
 							} else {
-								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Gave their life for the cause.");
-                                Best[2] = "";
+								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Self sacrificed for the cause.");
 							}
 						}
-
 						if (scripts[i].playerUsername == Best[3]) {
 							if (lifeCheck) {
-								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Most injured!");
-                                Best[3] = "";
+								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Took the most damage!");
 							} else {
 								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Gave in to their injuries.");
-                                Best[3] = "";
 							}
 						}
 
-                        if (scripts[i].playerUsername == Best[4]) {
-                            if (lifeCheck) {
-                                StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Wariest!");
-                                Best[4] = "";
-                            } else {
-                                StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Most clueless.");
-                                Best[4] = "";
-                            }
-                        }
-                    }
+						if (scripts[i].playerUsername == Best[4]) {
+							if (lifeCheck) {
+								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Wariest!");
+							} else {
+								StartOfRound.Instance.gameStats.allPlayerStats[i].playerNotes.Add("Most clueless.");
+							}
+						}
+					}
 				}
+				Best[1] = "";
+				Best[2] = "";
+				Best[3] = "";
+				Best[4] = "";
 			}
 		}
 	}

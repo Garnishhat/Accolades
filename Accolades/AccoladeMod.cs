@@ -14,7 +14,7 @@ namespace Accolade {
     public class AccoladeModBase : BaseUnityPlugin {
         private const string modGUID = "GHAccoladesMod";
         private const string modName = "GH Accolades";
-        private const string modVersion = "1.0.0";
+        private const string modVersion = "2.0.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
